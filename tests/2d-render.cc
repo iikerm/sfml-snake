@@ -9,7 +9,7 @@ using namespace std;
 
 int main()
 {
-    float moveDistance = 30;
+    float moveDistance = 50;
     // create the window
     sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "My window");      // sf::Style::Fullscreen can be added at the end for F11 fullscreen
 
@@ -22,7 +22,7 @@ int main()
     sf::Sprite psSprite;
     psSprite.setTexture(psTexture);
     psSprite.setPosition(sf::Vector2f(120.f, 50.f));
-    psSprite.scale(sf::Vector2f(0.2, 0.2));      // ps is supposed to be a square
+    psSprite.scale(sf::Vector2f(5, 5));      // ps is supposed to be a square
 
 
     // run the program as long as the window is open
@@ -57,7 +57,7 @@ int main()
 
 
         // clear the window with black color
-        window.clear(sf::Color::Black);
+        // window.clear(sf::Color::Black);
 
         // draw everything here...
         window.draw(psSprite);
