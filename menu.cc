@@ -13,6 +13,7 @@ using namespace std;
 
 void startMenu(){
     cout << "Starting menu" << endl;
+    system("./tests/2d-render");
 }
 
 void startCinematic(){
@@ -35,6 +36,8 @@ void revertLightupMenuText(sf::Text &menuText){
 int main(){
     sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "Main menu");
     window.setKeyRepeatEnabled(false);
+
+    int moveDistance = 20, count=0;
 
     sf::Vector2i mousePosition;
 
