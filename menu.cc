@@ -20,16 +20,53 @@ void startCinematic(){
     cout << "Starting cinematic" << endl;
 }
 
-void lightupMenuText(sf::Text &menuText){
-    menuText.setFillColor(SELECTED_TEXT_COLOR);
-    // Better to use .setPosition because if not text will move infinitely
-    menuText.setPosition(sf::Vector2f(60 ,menuText.getPosition().y));
+void animateTextForward(sf::Text &textToMove, sf::Vector2f initialTextPos, float maxCount, float &countVar, bool &containerMoving, bool &posReached){
+    if (!containerMoving){
+        countVar = 0;
+        if (!posReached){
+            containerMoving = true;
+        }else{
+            containerMoving = false;
+            posReached = true;
+        }
+    }else{
+        if (textToMove.getPosition().x >= (initialTextPos.x+maxCount)){  // desired pos was reached
+            // cout << "Desired pos was reached" << endl;
+            textToMove.setPosition(initialTextPos.x+maxCount, initialTextPos.y);
+            containerMoving = false;
+            posReached = true;
+        }else{
+            // cout << testText.getPosition().x << " = " << (initialTextPos.x+maxCount) << endl;
+            // cout << "Moving text..." << endl;
+            textToMove.setPosition(textToMove.getPosition().x+countVar, textToMove.getPosition().y);
+            containerMoving = true;
+            countVar++;
+        }
+    }
+    textToMove.setFillColor(SELECTED_TEXT_COLOR);
 }
 
-void revertLightupMenuText(sf::Text &menuText){
-    menuText.setFillColor(NORMAL_TEXT_COLOR);
-    // Cant use .move here, must use .setPosition because this function is always called unless lightupMenuText is called so text will move infinitely
-    menuText.setPosition(sf::Vector2f(40 ,menuText.getPosition().y));
+
+void animateTextBackward(sf::Text &textToMove, sf::Vector2f initialTextPos, float maxCount, float &countVar, bool &containerMoving, bool &posReached){
+    if (!containerMoving){
+        countVar = 0;
+        if (posReached){
+            containerMoving = true;
+        }
+    }else{
+        if (textToMove.getPosition().x <= initialTextPos.x){  // desired pos was reached
+            // cout << "Desired pos was reached" << endl;
+            textToMove.setPosition(initialTextPos);
+            containerMoving = false;
+            posReached = false;
+        }else{
+            // cout << "Moving text..." << endl;
+            textToMove.setPosition(textToMove.getPosition().x-countVar, textToMove.getPosition().y);
+            containerMoving = true;
+            countVar++;
+        }
+    }
+    textToMove.setFillColor(NORMAL_TEXT_COLOR);
 }
 
 
@@ -37,7 +74,8 @@ int main(){
     sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "Main menu");
     window.setKeyRepeatEnabled(false);
 
-    int moveDistance = 20, count=0;
+    float moveDistance = 20, count=0, count2=0, count3=0;
+    bool textMoving=false, textPosReached=false, textMoving2=false, textPosReached2=false, textMoving3=false, textPosReached3=false;
 
     sf::Vector2i mousePosition;
 
@@ -64,6 +102,7 @@ int main(){
     exitText.setString("EXIT GAME");
 
     sf::FloatRect bBoxSt = stGameText.getGlobalBounds(), bBoxView = viewCinText.getGlobalBounds(), bBoxExit = exitText.getGlobalBounds();
+    sf::Vector2f iPosStGameText = stGameText.getPosition(), iPosViewCinText = viewCinText.getPosition(), iPosExitText = exitText.getPosition();
     // A better option would be to make a container for each text and use that as a boundary box
 
     titleText.setFont(pixelFont);
@@ -82,30 +121,30 @@ int main(){
             if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
                 window.close();
 
-            // Commands for when main menu text interacts with mouse
+            // Mouse events management
             if (bBoxSt.contains(mousePosition.x, mousePosition.y)){
-                lightupMenuText(stGameText);
+                animateTextForward(stGameText, iPosStGameText, moveDistance, count, textMoving, textPosReached);
                 if (event.type == sf::Event::MouseButtonPressed && sf::Mouse::isButtonPressed(sf::Mouse::Left)){
                     startMenu();
                 }
             }else{
-                revertLightupMenuText(stGameText);
+                animateTextBackward(stGameText, iPosStGameText, moveDistance, count, textMoving, textPosReached);
             }
             if (bBoxView.contains(mousePosition.x, mousePosition.y)){
-                lightupMenuText(viewCinText);
+                animateTextForward(viewCinText, iPosViewCinText, moveDistance, count2, textMoving2, textPosReached2);
                 if (event.type == sf::Event::MouseButtonPressed && sf::Mouse::isButtonPressed(sf::Mouse::Left)){
                     startCinematic();
                 }
             }else{
-                revertLightupMenuText(viewCinText);
+                animateTextBackward(viewCinText, iPosViewCinText, moveDistance, count2, textMoving2, textPosReached2);
             }
             if (bBoxExit.contains(mousePosition.x, mousePosition.y)){
-                lightupMenuText(exitText);
+                animateTextForward(exitText, iPosExitText, moveDistance, count3, textMoving3, textPosReached3);
                 if (event.type == sf::Event::MouseButtonPressed && sf::Mouse::isButtonPressed(sf::Mouse::Left)){
                     window.close();
                 }
             }else{
-                revertLightupMenuText(exitText);
+                animateTextBackward(exitText, iPosExitText, moveDistance, count3, textMoving3, textPosReached3);
             }
         
         } // scope of pollEvent while loop ends here
