@@ -13,7 +13,7 @@ using namespace std;
 
 void startMenu(){
     cout << "Starting menu" << endl;
-    system("./tests/2d-render");
+    system("./tests/initial/2d-render");
 }
 
 void startCinematic(){
@@ -118,7 +118,7 @@ int main(){
 
         // Keyboard events management
         while (window.pollEvent(event)){
-            if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+            if (event.type == sf::Event::Closed || (event.type == sf::Event::KeyPressed && sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)))
                 window.close();
 
             // Mouse events management
