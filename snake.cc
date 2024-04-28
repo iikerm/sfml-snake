@@ -7,6 +7,8 @@
 #include <vector>
 using namespace std;
 
+enum directions {north, south, west, east};
+
 class snakeHead{
     sf::Color eyeColor = sf::Color(25, 25, 25);
     private:
@@ -19,7 +21,7 @@ class snakeHead{
         snakeHead(sf::Vector2f rectSize, sf::Color color);
         void setHeadPosition(sf::Vector2f pos, float divWidth);
         sf::RectangleShape getHead(){return headRect;}
-        vector<sf::RectangleShape> getDrawables(){return vector<sf::RectangleShape>{headRect, eyeRectW, eyeRectE};}
+        vector<sf::RectangleShape*> getDrawables(){return vector<sf::RectangleShape*>{&headRect, &eyeRectW, &eyeRectE};}
 };
 
 snakeHead::snakeHead(sf::Vector2f rectSize, sf::Color color){
@@ -35,12 +37,13 @@ snakeHead::snakeHead(sf::Vector2f rectSize, sf::Color color){
 }
 
 void snakeHead::setHeadPosition(sf::Vector2f pos, float divWidth){
+    // divWidth is only needed to move the snake's eyes
     position = pos;
     headRect.setPosition(pos);
 
-    cout << pos.x << " and " << pos.y << endl;
-    cout << pos.x*1.1 << " and " << pos.y*1.1 << endl;
-    cout << pos.x*1.9 << " and " << pos.y*1.1 << endl;
+    //cout << "head position: " << pos.x << " and " << pos.y << endl;
+    //cout << "left eye position: " << pos.x+(divWidth*0.3) << " and " << pos.y+(divWidth*0.25) << endl;
+    //cout << "right eye position: " << pos.x+(divWidth*0.6) << " and " << pos.y+(divWidth*0.25) << endl << endl;
 
     eyeRectW.setPosition(sf::Vector2f(pos.x+(divWidth*0.3), pos.y+(divWidth*0.25)));
     eyeRectE.setPosition(sf::Vector2f(pos.x+(divWidth*0.6), pos.y+(divWidth*0.25)));
@@ -62,6 +65,7 @@ class gameMatrix{
         vector<vector<sf::Vertex>> getLinesVector(){return linesVector;}
         sf::Vector2f getMiddlePos(){return middlePos;}
         sf::Vector2f getDivWidth(){return sf::Vector2f(divWidth, divWidth);}
+        sf::Vector2f getAdjacentPos(directions dir, sf::Vector2f currentPos);
 };
 
 gameMatrix::gameMatrix(sf::RenderWindow &master, unsigned int nDivs){
@@ -118,6 +122,47 @@ gameMatrix::gameMatrix(sf::RenderWindow &master, unsigned int nDivs){
     // if the matrix has an even number of rows & columns, the square NW of the 4 ones in the middle will be returned
 }
 
+sf::Vector2f gameMatrix::getAdjacentPos(directions dir, sf::Vector2f currentPos){
+    sf::Vector2f goalVector;
+    int long unsigned i=0, j=0, columnIndex=0, rowIndex=0;
+    bool found = false;
+    for (i=0; i<gridMatrix.size(); i++){
+        for (j=0; j<gridMatrix[i].size(); j++){
+            if (gridMatrix[i][j] == currentPos){
+                rowIndex = i;
+                columnIndex = j;
+                found = true;
+            }
+        }
+    }
+    cout << "Current index is: \nrow: " << rowIndex << "\ncolumn: " << columnIndex << endl << endl;
+
+    if (found){
+        if (dir == north){
+            goalVector = gridMatrix[rowIndex-1][columnIndex];
+            cout << "New row: " << (rowIndex-1) << endl;
+            cout << goalVector.x << "  " << goalVector.y << endl;
+        }
+        if (dir == south){
+            goalVector = gridMatrix[rowIndex+1][columnIndex];
+            cout << "New row: " << (rowIndex+1) << endl;
+            cout << goalVector.x << "  " << goalVector.y << endl;
+        }
+        if (dir == east){
+            goalVector = gridMatrix[rowIndex][columnIndex+1];
+            cout << "New column: " << (columnIndex+1) << endl;
+            cout << goalVector.x << "  " << goalVector.y << endl;
+        }
+        if (dir == west){
+            goalVector == gridMatrix[rowIndex][columnIndex-1];
+            cout << "New column: " << (columnIndex-1) << endl;
+            cout << goalVector.x << "  " << goalVector.y << endl;
+        }
+    }else{
+        cout << "Matrix position: " << currentPos.x << " x " << currentPos.y << " not found" << endl;
+    }
+    return goalVector;
+}
 
 
 int main(){
@@ -132,7 +177,9 @@ int main(){
 
     snakeHead head(matx.getDivWidth(), sf::Color(100, 100, 255));
     head.setHeadPosition(matx.getMiddlePos(), matx.getDivWidth().x);
-    vector<sf::RectangleShape> headDrawables = head.getDrawables();
+    vector<sf::RectangleShape*> headDrawables = head.getDrawables();
+
+    sf::Vector2f nextHeadPos;
 
     while (window.isOpen()){
         sf::Event event;
@@ -140,12 +187,32 @@ int main(){
             if(event.type == sf::Event::Closed || (event.type == sf::Event::KeyPressed && sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))){
                 window.close();
             }
+
+            if (event.type == sf::Event::KeyPressed){
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
+                    nextHeadPos = matx.getAdjacentPos(north, head.getHead().getPosition());
+                    head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);                    
+                }
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
+                    nextHeadPos = matx.getAdjacentPos(south, head.getHead().getPosition());
+                    head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
+                }
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
+                    nextHeadPos = matx.getAdjacentPos(east, head.getHead().getPosition());
+                    head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
+                }
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
+                    nextHeadPos = matx.getAdjacentPos(west, head.getHead().getPosition());
+                    head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
+                }
+            }
+
         }
 
         window.clear();
 
         for (i=0; i<headDrawables.size(); i++){
-            window.draw(headDrawables[i]);
+            window.draw(*(headDrawables[i]));
         }
         
         for (i=0; i<linesVector.size(); i++){
