@@ -8,7 +8,27 @@
 #include <cstdlib>      // used for rand() in appleBlock
 using namespace std;
 
+const sf::Color BG_COLOR = sf::Color(0, 0, 0);
+const sf::Color SNAKE_COLOR = sf::Color(100, 100, 255);
+
 enum directions {north, south, west, east};
+
+directions oppositeDir(directions currentDir){
+    switch (currentDir){
+        case north:
+            return south;
+            break;
+        case south:
+            return north;
+            break;
+        case west:
+            return east;
+            break;
+        default:
+            return west;
+            break;
+    }
+}
 
 
 class appleBlock{
@@ -22,6 +42,7 @@ class appleBlock{
         void setApplePosition(sf::Vector2f newPos){position = newPos; apple.setPosition(position);}
         void setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix);
         sf::RectangleShape getAppleRect(){return apple;}
+        sf::FloatRect getAppleBounds(){return sf::FloatRect(apple.getGlobalBounds());}
         sf::Vector2f getApplePosition(){return position;}
 };
 
@@ -30,12 +51,10 @@ appleBlock::appleBlock(sf::Vector2f rectSize){      // normal constructor with d
     apple.setFillColor(appleColor);
 }
 
-
 appleBlock::appleBlock(sf::Vector2f rectSize, sf::Color customAppleColor){    // overload to include custom color
     apple = sf::RectangleShape(rectSize);
     apple.setFillColor(customAppleColor);
 }
-
 
 void appleBlock::setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix){
     // we need the grid matrix in order to establish what the maximum x and y values can be
@@ -48,9 +67,12 @@ void appleBlock::setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix){
     
     srand(time(0));     // Set random (based on current time) seed for random number
     
-    colIndex = (rand()%maxColIndex);
-    rowIndex = (rand()%maxRowIndex);
-    randPosition = sf::Vector2f(gridMatrix[rowIndex][colIndex]);        // matrix should be square so order of row/column should not matter in theory
+    do{
+        colIndex = (rand()%maxColIndex);
+        rowIndex = (rand()%maxRowIndex);
+        randPosition = sf::Vector2f(gridMatrix[rowIndex][colIndex]);        // matrix should be square so order of row/column should not matter in theory
+    }while(randPosition == position);       // so that position cannot be the same two consecutive times
+    
     position = randPosition;
     apple.setPosition(position);
 }
@@ -58,6 +80,7 @@ void appleBlock::setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix){
 
 
 class snakeHead{
+    sf::Color snakeColor = SNAKE_COLOR;
     sf::Color eyeColor = sf::Color(25, 25, 25);
     private:
         sf::RectangleShape headRect;
@@ -66,23 +89,24 @@ class snakeHead{
         sf::Vector2f position;
         sf::Color headColor;
     public:
-        snakeHead(sf::Vector2f rectSize, sf::Color color);
+        snakeHead(sf::Vector2f rectSize);
         void setHeadPosition(sf::Vector2f pos, float divWidth);
         sf::RectangleShape getHead(){return headRect;}
+        sf::Vector2f getHeadSize(){return headRect.getSize();}
 
         // pointer array is important, because if not we will be trying to draw copies of current drawables on screen instead of the actual ones we want to draw
         vector<sf::RectangleShape*> getDrawables(){return vector<sf::RectangleShape*>{&headRect, &eyeRectW, &eyeRectE};}
 };
 
-snakeHead::snakeHead(sf::Vector2f rectSize, sf::Color color){
+snakeHead::snakeHead(sf::Vector2f rectSize){
     headRect = sf::RectangleShape(rectSize);
-    headColor = color;
-    headRect.setFillColor(color);
+    headColor = snakeColor;
+    headRect.setFillColor(headColor);
 
     // Eyes are named as if the snake is looking upwards with eyeRectW being west and eyeRectE being east
-    eyeRectW = sf::RectangleShape(sf::Vector2f(rectSize.x*0.1, rectSize.y*0.1));
+    eyeRectW = sf::RectangleShape(sf::Vector2f(rectSize.x*0.1, rectSize.y*0.2));
     eyeRectW.setFillColor(eyeColor);
-    eyeRectE = sf::RectangleShape(sf::Vector2f(rectSize.x*0.1, rectSize.y*0.1));
+    eyeRectE = sf::RectangleShape(sf::Vector2f(rectSize.x*0.1, rectSize.y*0.2));
     eyeRectE.setFillColor(eyeColor);
 }
 
@@ -95,12 +119,38 @@ void snakeHead::setHeadPosition(sf::Vector2f pos, float divWidth){
     //cout << "left eye position: " << pos.x+(divWidth*0.3) << " and " << pos.y+(divWidth*0.25) << endl;
     //cout << "right eye position: " << pos.x+(divWidth*0.6) << " and " << pos.y+(divWidth*0.25) << endl << endl;
 
-    eyeRectW.setPosition(sf::Vector2f(pos.x+(divWidth*0.3), pos.y+(divWidth*0.25)));
-    eyeRectE.setPosition(sf::Vector2f(pos.x+(divWidth*0.6), pos.y+(divWidth*0.25)));
+    eyeRectW.setPosition(sf::Vector2f(pos.x+(divWidth*0.3), pos.y+(divWidth*0.4)));
+    eyeRectE.setPosition(sf::Vector2f(pos.x+(divWidth*0.6), pos.y+(divWidth*0.4)));
+}
+
+
+// Unused func
+void animateRect(snakeHead &headToMove, sf::Vector2f initialPos, float distToMove, float countVar, bool &containerMoving, bool &posReached){
+    if (!containerMoving){
+        if (!posReached){
+            containerMoving = true;
+        }else{
+            containerMoving = false;
+            posReached = true;
+        }
+    }else{
+        if (headToMove.getHead().getPosition().x >= (initialPos.x+distToMove)){  // desired pos was reached
+            // cout << "Desired pos was reached" << endl;
+            headToMove.setHeadPosition(sf::Vector2f(initialPos.x+distToMove, initialPos.y), headToMove.getHeadSize().x);
+            containerMoving = false;
+            posReached = true;
+        }else{
+            // cout << rectToMove.getPosition().x << " = " << (initialPos.x+distToMove) << endl;
+            // cout << "Moving element..." << endl;
+            headToMove.setHeadPosition(sf::Vector2f(headToMove.getHead().getPosition().x+countVar, headToMove.getHead().getPosition().y), headToMove.getHeadSize().x);
+            containerMoving = true;
+        }
+    }
 }
 
 
 class gameMatrix{
+    sf::Color lineColor = BG_COLOR;
     private:
         sf::RenderWindow* masterWindow;
         unsigned int numDivs;
@@ -121,7 +171,8 @@ gameMatrix::gameMatrix(sf::RenderWindow &master, unsigned int nDivs){
     unsigned int i=0, j=0;
     vector<sf::Vector2f> rowPositions;
     vector<sf::Vertex> currentLine;
-    
+
+    // Arguments validation
     if (master.getSize().x != master.getSize().y){
         throw invalid_argument("game is designed for window to be a square");
     }
@@ -138,7 +189,7 @@ gameMatrix::gameMatrix(sf::RenderWindow &master, unsigned int nDivs){
     if (numDivs <= 2){
         throw invalid_argument("number of divs is too small, it is recommended to be above 10-20");
     }
-    divWidth = ((float)(masterWindow->getSize().x)) / ((float)(numDivs-1));
+    divWidth = ((float)(masterWindow->getSize().x)) / ((float)(numDivs));       // numDivs -1
 
     // Generating matrix of snake's coordinates
     for(i=0; i<numDivs; i++){
@@ -153,15 +204,15 @@ gameMatrix::gameMatrix(sf::RenderWindow &master, unsigned int nDivs){
     // Vertical lines:
     for (i=0; i<gridMatrix[0].size(); i++){
         currentLine.clear();
-        currentLine.push_back(sf::Vertex(gridMatrix[0][i]));
-        currentLine.push_back(sf::Vertex(gridMatrix[(gridMatrix.size()-1)][i]));
+        currentLine.push_back(sf::Vertex(gridMatrix[0][i], sf::Color(0, 0, 0)));
+        currentLine.push_back(sf::Vertex(sf::Vector2f(gridMatrix[(gridMatrix.size()-1)][i].x+divWidth, gridMatrix[(gridMatrix.size()-1)][i].y), lineColor));
         linesVector.push_back(currentLine);
     }
     // Horizontal lines
     for (i=0; i<gridMatrix.size(); i++){
         currentLine.clear();
-        currentLine.push_back(sf::Vertex(gridMatrix[i][0]));
-        currentLine.push_back(sf::Vertex(gridMatrix[i][gridMatrix[i].size()-1]));
+        currentLine.push_back(sf::Vertex(gridMatrix[i][0], sf::Color(0, 0, 0)));
+        currentLine.push_back(sf::Vertex(sf::Vector2f(gridMatrix[i][gridMatrix[i].size()-1].x, gridMatrix[i][gridMatrix[i].size()-1].y+divWidth), lineColor));
         linesVector.push_back(currentLine);
     }
 
@@ -172,7 +223,6 @@ gameMatrix::gameMatrix(sf::RenderWindow &master, unsigned int nDivs){
 }
 
 
-// FIX INVERTED CONTROLS AND LEFT BEING REDIRECTED TO (0, 0)
 sf::Vector2f gameMatrix::getAdjacentPos(directions dir, sf::Vector2f currentPos){
     sf::Vector2f goalVector;
     int long unsigned i=0, j=0, columnIndex=0, rowIndex=0;
@@ -186,53 +236,72 @@ sf::Vector2f gameMatrix::getAdjacentPos(directions dir, sf::Vector2f currentPos)
             }
         }
     }
-    cout << "Current index is: \nrow: " << rowIndex << "\ncolumn: " << columnIndex << endl << endl;
-
+    
     if (found){
         if (dir == north){
-            goalVector = gridMatrix[rowIndex-1][columnIndex];
-            cout << "New row: " << (rowIndex-1) << endl;
-            cout << goalVector.x << "  " << goalVector.y << endl;
+            columnIndex -= 1;
         }
         if (dir == south){
-            goalVector = gridMatrix[rowIndex+1][columnIndex];
-            cout << "New row: " << (rowIndex+1) << endl;
-            cout << goalVector.x << "  " << goalVector.y << endl;
+            columnIndex += 1;
         }
         if (dir == east){
-            goalVector = gridMatrix[rowIndex][columnIndex+1];
-            cout << "New column: " << (columnIndex+1) << endl;
-            cout << goalVector.x << "  " << goalVector.y << endl;
+            rowIndex += 1;
         }
         if (dir == west){
-            goalVector == gridMatrix[rowIndex][columnIndex-1];
-            cout << "New column: " << (columnIndex-1) << endl;
-            cout << goalVector.x << "  " << goalVector.y << endl;
+            rowIndex -= 1;
+        }        
+
+        if (rowIndex == -1){
+            rowIndex = (gridMatrix.size()-1);
         }
-    }else{
+        if (rowIndex > gridMatrix.size()-1){
+            rowIndex = 0;
+        }
+        if (columnIndex == -1){
+            columnIndex = (gridMatrix[0].size()-1);
+        }
+        if (columnIndex > gridMatrix[0].size()-1){
+            columnIndex = 0;
+        }
+        
+
+        goalVector = gridMatrix[rowIndex][columnIndex];
+        // cout << "Current pos is: " << goalVector.x << " x " << goalVector.y << endl;
+        // cout << "Current index is: \nrow: " << rowIndex << "\ncolumn: " << columnIndex << endl << endl;
+
+    }/*else{
         cout << "Matrix position: " << currentPos.x << " x " << currentPos.y << " not found" << endl;
-    }
+        throw invalid_argument("Matrix position not found");
+    }*/
     return goalVector;
 }
 
 
 int main(){
-    unsigned int i=0;
+    unsigned int i=0, score=0;
     sf::RenderWindow window(sf::VideoMode(600, 600), "Snake game in c++");
-    // head snakeHead(sf::Vector2f());
     cout << "Window size is: " << window.getSize().x << " x " << window.getSize().y << endl;
 
-    gameMatrix matx(window, 20);
+    gameMatrix matx(window, 15);
     vector<vector<sf::Vertex>> linesVector = matx.getLinesVector();
     sf::Vertex lineToDraw[2];
 
-    snakeHead head(matx.getDivWidth(), sf::Color(100, 100, 255));
+    snakeHead head(matx.getDivWidth());
     head.setHeadPosition(matx.getMiddlePos(), matx.getDivWidth().x);
     vector<sf::RectangleShape*> headDrawables = head.getDrawables();
 
     sf::Vector2f nextHeadPos;
-    appleBlock testApple(matx.getDivWidth());
-    testApple.setAppleRandPosition(matx.getGridMatrix());
+    appleBlock theApple(matx.getDivWidth());
+    theApple.setAppleRandPosition(matx.getGridMatrix());
+
+    directions currentDir=east;
+    unsigned int count=0, lastMoved=0, controlDelay=0, itersUpdate=2000;
+    // count%itersUpdate gives the max "fps" i.e. the snake's speed
+    // tested values for itersUpdate: 4000 ~ slow speed;  2500 ~ medium speed;  1000 ~ fast speed;
+
+    /*animation vars
+    bool headMoving=false, headPosReached=false;
+    sf::Vector2f headInitialPos;*/
 
     while (window.isOpen()){
         sf::Event event;
@@ -243,38 +312,78 @@ int main(){
 
             if (event.type == sf::Event::KeyPressed){
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
-                    nextHeadPos = matx.getAdjacentPos(north, head.getHead().getPosition());
-                    head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);                    
+                    // nextHeadPos = matx.getAdjacentPos(north, head.getHead().getPosition());
+                    // head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
+                    if (currentDir != oppositeDir(north)){
+                        currentDir = north;
+                    }
+                    lastMoved = count;
+                }else{
+                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
+                        // nextHeadPos = matx.getAdjacentPos(south, head.getHead().getPosition());
+                        // head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
+                        if (currentDir != oppositeDir(south)){
+                            currentDir = south;
+                        }
+                        lastMoved = count;
+                    }else{
+                        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
+                            // nextHeadPos = matx.getAdjacentPos(east, head.getHead().getPosition());
+                            // head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
+                            if (currentDir != oppositeDir(east)){
+                                currentDir = east;
+                            }
+                            lastMoved = count;
+                        }else{
+                            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
+                                // nextHeadPos = matx.getAdjacentPos(west, head.getHead().getPosition());
+                                // head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
+                                if (currentDir != oppositeDir(west)){
+                                    currentDir = west;
+                                }
+                                lastMoved = count;
+                            }
+                        }
+                    }
                 }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
-                    nextHeadPos = matx.getAdjacentPos(south, head.getHead().getPosition());
-                    head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
-                }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
-                    nextHeadPos = matx.getAdjacentPos(east, head.getHead().getPosition());
-                    head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
-                }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
-                    nextHeadPos = matx.getAdjacentPos(west, head.getHead().getPosition());
-                    head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
-                }
+            }
+        }
+        
+        nextHeadPos = matx.getAdjacentPos(currentDir, head.getHead().getPosition());
+        
+
+        if (count%itersUpdate == 0){
+
+            // detecting collisions
+            if (theApple.getAppleBounds().intersects(head.getHead().getGlobalBounds())){
+                theApple.setAppleRandPosition(matx.getGridMatrix());
+                score++;
+                cout << "New score is: " << score << endl;
+            }
+            
+            head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);         // works but animation is weird
+
+            window.clear(BG_COLOR);
+
+            window.draw(theApple.getAppleRect());
+
+            for (i=0; i<headDrawables.size(); i++){
+                window.draw(*(headDrawables[i]));
+            }
+            
+            for (i=0; i<linesVector.size(); i++){
+                lineToDraw[0] = linesVector[i][0];
+                lineToDraw[1] = linesVector[i][1];
+                window.draw(lineToDraw, 2, sf::Lines);
             }
 
         }
 
-        window.clear();
-
-        for (i=0; i<headDrawables.size(); i++){
-            window.draw(*(headDrawables[i]));
+        if (count == UINT32_MAX){
+            count = 0;
         }
-        
-        for (i=0; i<linesVector.size(); i++){
-            lineToDraw[0] = linesVector[i][0];
-            lineToDraw[1] = linesVector[i][1];
-            window.draw(lineToDraw, 2, sf::Lines);
-        }
+        count++;
 
-        window.draw(testApple.getAppleRect());
         window.display();
     }
 
