@@ -5,9 +5,57 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
+#include <cstdlib>      // used for rand() in appleBlock
 using namespace std;
 
 enum directions {north, south, west, east};
+
+
+class appleBlock{
+    sf::Color appleColor = sf::Color(250, 50, 50);      // default color for apples declared using first constructor
+    private:
+        sf::RectangleShape apple;
+        sf::Vector2f position;
+    public:
+        appleBlock(sf::Vector2f rectSize);
+        appleBlock(sf::Vector2f rectSize, sf::Color customAppleColor);    // overload to include custom color
+        void setApplePosition(sf::Vector2f newPos){position = newPos; apple.setPosition(position);}
+        void setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix);
+        sf::RectangleShape getAppleRect(){return apple;}
+        sf::Vector2f getApplePosition(){return position;}
+};
+
+appleBlock::appleBlock(sf::Vector2f rectSize){      // normal constructor with default color
+    apple = sf::RectangleShape(rectSize);
+    apple.setFillColor(appleColor);
+}
+
+
+appleBlock::appleBlock(sf::Vector2f rectSize, sf::Color customAppleColor){    // overload to include custom color
+    apple = sf::RectangleShape(rectSize);
+    apple.setFillColor(customAppleColor);
+}
+
+
+void appleBlock::setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix){
+    // we need the grid matrix in order to establish what the maximum x and y values can be
+    int unsigned maxRowIndex=0, maxColIndex=0, rowIndex=0, colIndex=0;
+    sf::Vector2f randPosition;
+
+    maxColIndex = gridMatrix.size();    // Maximum index possible for a column (Y value) inside the grid matrix
+    maxRowIndex = gridMatrix[0].size();    // Maximum index possible for a row (X value) inside the grid matrix
+    // It doesn't matter which index is taken to calculate maxRowIndex because all the rows in the matrix should be the same size
+    
+    srand(time(0));     // Set random (based on current time) seed for random number
+    
+    colIndex = (rand()%maxColIndex);
+    rowIndex = (rand()%maxRowIndex);
+    randPosition = sf::Vector2f(gridMatrix[rowIndex][colIndex]);        // matrix should be square so order of row/column should not matter in theory
+    position = randPosition;
+    apple.setPosition(position);
+}
+
+
 
 class snakeHead{
     sf::Color eyeColor = sf::Color(25, 25, 25);
@@ -21,6 +69,8 @@ class snakeHead{
         snakeHead(sf::Vector2f rectSize, sf::Color color);
         void setHeadPosition(sf::Vector2f pos, float divWidth);
         sf::RectangleShape getHead(){return headRect;}
+
+        // pointer array is important, because if not we will be trying to draw copies of current drawables on screen instead of the actual ones we want to draw
         vector<sf::RectangleShape*> getDrawables(){return vector<sf::RectangleShape*>{&headRect, &eyeRectW, &eyeRectE};}
 };
 
@@ -50,7 +100,6 @@ void snakeHead::setHeadPosition(sf::Vector2f pos, float divWidth){
 }
 
 
-// CREATE A FUNCTION TO OBTAIN POSITION IN GRID OF ADJACENT ELEMENT BY USING AN ENUM DATATYPE (UP, DOWN, LEFT, RIGHT)
 class gameMatrix{
     private:
         sf::RenderWindow* masterWindow;
@@ -122,6 +171,8 @@ gameMatrix::gameMatrix(sf::RenderWindow &master, unsigned int nDivs){
     // if the matrix has an even number of rows & columns, the square NW of the 4 ones in the middle will be returned
 }
 
+
+// FIX INVERTED CONTROLS AND LEFT BEING REDIRECTED TO (0, 0)
 sf::Vector2f gameMatrix::getAdjacentPos(directions dir, sf::Vector2f currentPos){
     sf::Vector2f goalVector;
     int long unsigned i=0, j=0, columnIndex=0, rowIndex=0;
@@ -180,6 +231,8 @@ int main(){
     vector<sf::RectangleShape*> headDrawables = head.getDrawables();
 
     sf::Vector2f nextHeadPos;
+    appleBlock testApple(matx.getDivWidth());
+    testApple.setAppleRandPosition(matx.getGridMatrix());
 
     while (window.isOpen()){
         sf::Event event;
@@ -220,6 +273,8 @@ int main(){
             lineToDraw[1] = linesVector[i][1];
             window.draw(lineToDraw, 2, sf::Lines);
         }
+
+        window.draw(testApple.getAppleRect());
         window.display();
     }
 
