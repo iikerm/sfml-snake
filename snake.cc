@@ -2,14 +2,45 @@
 #define _SFML_GRAPHICS_HPP_
 
 
+/* Unused func
+void animateRect(snakeHead &headToMove, sf::Vector2f initialPos, float distToMove, float countVar, bool &containerMoving, bool &posReached){
+    if (!containerMoving){
+        if (!posReached){
+            containerMoving = true;
+        }else{
+            containerMoving = false;
+            posReached = true;
+        }
+    }else{
+        if (headToMove.getHead().getPosition().x >= (initialPos.x+distToMove)){  // desired pos was reached
+            // cout << "Desired pos was reached" << endl;
+            headToMove.setHeadPosition(sf::Vector2f(initialPos.x+distToMove, initialPos.y), headToMove.getHeadSize().x);
+            containerMoving = false;
+            posReached = true;
+        }else{
+            // cout << rectToMove.getPosition().x << " = " << (initialPos.x+distToMove) << endl;
+            // cout << "Moving element..." << endl;
+            headToMove.setHeadPosition(sf::Vector2f(headToMove.getHead().getPosition().x+countVar, headToMove.getHead().getPosition().y), headToMove.getHeadSize().x);
+            containerMoving = true;
+        }
+    }
+}*/
+
+
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
 #include <cstdlib>      // used for rand() in appleBlock
 using namespace std;
 
+const int MATRIX_SIZE = 15;
+
 const sf::Color BG_COLOR = sf::Color(0, 0, 0);
-const sf::Color SNAKE_COLOR = sf::Color(100, 100, 255);
+const sf::Color SNAKE_HEAD_COLOR = sf::Color(100, 100, 255);
+const sf::Color SNAKE_EYE_COLOR = sf::Color(25, 25, 25);
+const sf::Color SNAKE_BODY_COLOR = sf::Color(150, 150, 255);
+const sf::Color LINE_COLOR = sf::Color(0, 0, 0);
+
 
 enum directions {north, south, west, east};
 
@@ -31,8 +62,55 @@ directions oppositeDir(directions currentDir){
 }
 
 
+class snakeBody{
+    sf::Color snakeBodyColor = SNAKE_BODY_COLOR;
+    private:
+        sf::RectangleShape bodyRect;
+        int long unsigned ownIndex;     // Will contain its index inside of the snake's body vector
+        sf::Vector2f position;
+        sf::Color bodyColor;
+    public:
+        snakeBody();
+        snakeBody(sf::Vector2f rectSize);
+        snakeBody(snakeBody &oldSB);
+        void setRectPosition(sf::Vector2f pos);
+        sf::RectangleShape getBodyPartRect(){return bodyRect;}
+        int getIndex(){return ownIndex;}
+        sf::Vector2f getPosition(){return position;}
+};
+
+snakeBody::snakeBody(){
+    bodyRect = sf::RectangleShape(sf::Vector2f(0, 0));
+    bodyColor = snakeBodyColor;
+    bodyRect.setFillColor(snakeBodyColor);
+}
+
+snakeBody::snakeBody(sf::Vector2f rectSize){
+    bodyRect = sf::RectangleShape(rectSize);
+    bodyColor = snakeBodyColor;
+    bodyRect.setFillColor(snakeBodyColor);
+}
+
+snakeBody::snakeBody(snakeBody &oldSB){
+    bodyRect = oldSB.bodyRect;
+    ownIndex = oldSB.ownIndex + 1;      // because this function will always be called for the last element in the snake's body vector
+    position = oldSB.position;
+    bodyColor = oldSB.bodyColor;
+}
+
+void snakeBody::setRectPosition(sf::Vector2f pos){
+    position = pos;
+    bodyRect.setPosition(position);
+}
+
+void duplicateLastRect(vector<snakeBody*> &bodyVector){
+    snakeBody newLastElement(*(bodyVector[bodyVector.size()-1]));
+    bodyVector.push_back(&newLastElement);
+}
+
+
 class appleBlock{
-    sf::Color appleColor = sf::Color(250, 50, 50);      // default color for apples declared using first constructor
+    sf::Color appleColor = sf::Color(250, 50, 50);
     private:
         sf::RectangleShape apple;
         sf::Vector2f position;
@@ -78,10 +156,9 @@ void appleBlock::setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix){
 }
 
 
-
 class snakeHead{
-    sf::Color snakeColor = SNAKE_COLOR;
-    sf::Color eyeColor = sf::Color(25, 25, 25);
+    sf::Color snakeHeadColor = SNAKE_HEAD_COLOR;
+    sf::Color eyeColor = SNAKE_EYE_COLOR;
     private:
         sf::RectangleShape headRect;
         sf::RectangleShape eyeRectW;
@@ -100,7 +177,7 @@ class snakeHead{
 
 snakeHead::snakeHead(sf::Vector2f rectSize){
     headRect = sf::RectangleShape(rectSize);
-    headColor = snakeColor;
+    headColor = snakeHeadColor;
     headRect.setFillColor(headColor);
 
     // Eyes are named as if the snake is looking upwards with eyeRectW being west and eyeRectE being east
@@ -124,33 +201,8 @@ void snakeHead::setHeadPosition(sf::Vector2f pos, float divWidth){
 }
 
 
-// Unused func
-void animateRect(snakeHead &headToMove, sf::Vector2f initialPos, float distToMove, float countVar, bool &containerMoving, bool &posReached){
-    if (!containerMoving){
-        if (!posReached){
-            containerMoving = true;
-        }else{
-            containerMoving = false;
-            posReached = true;
-        }
-    }else{
-        if (headToMove.getHead().getPosition().x >= (initialPos.x+distToMove)){  // desired pos was reached
-            // cout << "Desired pos was reached" << endl;
-            headToMove.setHeadPosition(sf::Vector2f(initialPos.x+distToMove, initialPos.y), headToMove.getHeadSize().x);
-            containerMoving = false;
-            posReached = true;
-        }else{
-            // cout << rectToMove.getPosition().x << " = " << (initialPos.x+distToMove) << endl;
-            // cout << "Moving element..." << endl;
-            headToMove.setHeadPosition(sf::Vector2f(headToMove.getHead().getPosition().x+countVar, headToMove.getHead().getPosition().y), headToMove.getHeadSize().x);
-            containerMoving = true;
-        }
-    }
-}
-
-
 class gameMatrix{
-    sf::Color lineColor = BG_COLOR;
+    sf::Color lineColor = LINE_COLOR;
     private:
         sf::RenderWindow* masterWindow;
         unsigned int numDivs;
@@ -236,20 +288,11 @@ sf::Vector2f gameMatrix::getAdjacentPos(directions dir, sf::Vector2f currentPos)
             }
         }
     }
-    
     if (found){
-        if (dir == north){
-            columnIndex -= 1;
-        }
-        if (dir == south){
-            columnIndex += 1;
-        }
-        if (dir == east){
-            rowIndex += 1;
-        }
-        if (dir == west){
-            rowIndex -= 1;
-        }        
+        if (dir == north){columnIndex -= 1;}
+        if (dir == south){columnIndex += 1;}
+        if (dir == east){rowIndex += 1;}
+        if (dir == west){rowIndex -= 1;}        
 
         if (rowIndex == -1){
             rowIndex = (gridMatrix.size()-1);
@@ -264,7 +307,6 @@ sf::Vector2f gameMatrix::getAdjacentPos(directions dir, sf::Vector2f currentPos)
             columnIndex = 0;
         }
         
-
         goalVector = gridMatrix[rowIndex][columnIndex];
         // cout << "Current pos is: " << goalVector.x << " x " << goalVector.y << endl;
         // cout << "Current index is: \nrow: " << rowIndex << "\ncolumn: " << columnIndex << endl << endl;
@@ -282,7 +324,7 @@ int main(){
     sf::RenderWindow window(sf::VideoMode(600, 600), "Snake game in c++");
     cout << "Window size is: " << window.getSize().x << " x " << window.getSize().y << endl;
 
-    gameMatrix matx(window, 15);
+    gameMatrix matx(window, MATRIX_SIZE);
     vector<vector<sf::Vertex>> linesVector = matx.getLinesVector();
     sf::Vertex lineToDraw[2];
 
@@ -290,18 +332,17 @@ int main(){
     head.setHeadPosition(matx.getMiddlePos(), matx.getDivWidth().x);
     vector<sf::RectangleShape*> headDrawables = head.getDrawables();
 
-    sf::Vector2f nextHeadPos;
+    sf::Vector2f nextHeadPos, lastHeadPos;
     appleBlock theApple(matx.getDivWidth());
     theApple.setAppleRandPosition(matx.getGridMatrix());
 
+    vector<snakeBody*> bodyVector;
+    snakeBody firstBodyElem;
+
     directions currentDir=east;
-    unsigned int count=0, lastMoved=0, controlDelay=0, itersUpdate=2000;
+    unsigned int count=0, lastMoved=0, itersUpdate=2000;
     // count%itersUpdate gives the max "fps" i.e. the snake's speed
     // tested values for itersUpdate: 4000 ~ slow speed;  2500 ~ medium speed;  1000 ~ fast speed;
-
-    /*animation vars
-    bool headMoving=false, headPosReached=false;
-    sf::Vector2f headInitialPos;*/
 
     while (window.isOpen()){
         sf::Event event;
@@ -310,7 +351,7 @@ int main(){
                 window.close();
             }
 
-            if (event.type == sf::Event::KeyPressed){
+            if (event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased){
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
                     // nextHeadPos = matx.getAdjacentPos(north, head.getHead().getPosition());
                     // head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
@@ -349,6 +390,7 @@ int main(){
             }
         }
         
+        lastHeadPos = head.getHead().getPosition();
         nextHeadPos = matx.getAdjacentPos(currentDir, head.getHead().getPosition());
         
 
@@ -359,6 +401,15 @@ int main(){
                 theApple.setAppleRandPosition(matx.getGridMatrix());
                 score++;
                 cout << "New score is: " << score << endl;
+
+                if (score == 1){        // Try to print vector to see what is happening. DRAW THE BODY
+                    firstBodyElem = snakeBody(head.getHeadSize());
+                    bodyVector.push_back(&(firstBodyElem));
+                }else{
+                    bodyVector[0]->setRectPosition(lastHeadPos);
+                    duplicateLastRect(bodyVector);
+                }
+
             }
             
             head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);         // works but animation is weird
