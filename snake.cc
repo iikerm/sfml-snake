@@ -47,7 +47,6 @@ class snakeBody{
     public:
         snakeBody();
         snakeBody(sf::Vector2f rectSize);
-        snakeBody(snakeBody &oldSB);
         void setRectPosition(sf::Vector2f pos);
         void setRectColor(sf::Color color){bodyColor = color; bodyRect.setFillColor(color);}
         sf::RectangleShape getBodyPartRect(){return bodyRect;}
@@ -65,13 +64,6 @@ snakeBody::snakeBody(sf::Vector2f rectSize){
     bodyRect = sf::RectangleShape(rectSize);
     bodyColor = snakeBodyColor;
     bodyRect.setFillColor(snakeBodyColor);
-}
-
-snakeBody::snakeBody(snakeBody &oldSB){
-    bodyRect = oldSB.bodyRect;
-    ownIndex = oldSB.ownIndex + 1;      // because this function will always be called for the last element in the snake's body vector
-    position = oldSB.position;
-    bodyColor = oldSB.bodyColor;
 }
 
 void snakeBody::setRectPosition(sf::Vector2f pos){
