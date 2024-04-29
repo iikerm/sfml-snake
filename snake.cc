@@ -11,7 +11,7 @@ const int MATRIX_SIZE = 20;
 const int unsigned MAX_FRAMES_PER_SECOND = 10;
 
 const sf::Color BG_COLOR = sf::Color(0, 0, 0);
-const sf::Color SNAKE_HEAD_COLOR = sf::Color(100, 100, 255);
+const sf::Color SNAKE_HEAD_COLOR = sf::Color(150, 150, 255);
 const sf::Color SNAKE_EYE_COLOR = sf::Color(25, 25, 25);
 const sf::Color SNAKE_BODY_COLOR = sf::Color(150, 150, 255);
 const sf::Color LINE_COLOR = sf::Color(0, 0, 0);
@@ -47,7 +47,7 @@ class snakeBody{
     public:
         snakeBody();
         snakeBody(sf::Vector2f rectSize);
-        // snakeBody(snakeBody &oldSB);
+        snakeBody(snakeBody &oldSB);
         void setRectPosition(sf::Vector2f pos);
         void setRectColor(sf::Color color){bodyColor = color; bodyRect.setFillColor(color);}
         sf::RectangleShape getBodyPartRect(){return bodyRect;}
@@ -67,12 +67,12 @@ snakeBody::snakeBody(sf::Vector2f rectSize){
     bodyRect.setFillColor(snakeBodyColor);
 }
 
-/*snakeBody::snakeBody(snakeBody &oldSB){
+snakeBody::snakeBody(snakeBody &oldSB){
     bodyRect = oldSB.bodyRect;
     ownIndex = oldSB.ownIndex + 1;      // because this function will always be called for the last element in the snake's body vector
     position = oldSB.position;
     bodyColor = oldSB.bodyColor;
-}*/
+}
 
 void snakeBody::setRectPosition(sf::Vector2f pos){
     position = pos;
@@ -89,7 +89,7 @@ class appleBlock{
         appleBlock(sf::Vector2f rectSize);
         appleBlock(sf::Vector2f rectSize, sf::Color customAppleColor);    // overload to include custom color
         void setApplePosition(sf::Vector2f newPos){position = newPos; apple.setPosition(position);}
-        void setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix);
+        void setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix, vector<sf::Vector2f> invalidPositions);
         sf::RectangleShape getAppleRect(){return apple;}
         sf::FloatRect getAppleBounds(){return sf::FloatRect(apple.getGlobalBounds());}
         sf::Vector2f getApplePosition(){return position;}
@@ -105,7 +105,7 @@ appleBlock::appleBlock(sf::Vector2f rectSize, sf::Color customAppleColor){    //
     apple.setFillColor(customAppleColor);
 }
 
-void appleBlock::setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix){
+void appleBlock::setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix, vector<sf::Vector2f> invalidPositions={}){
     // we need the grid matrix in order to establish what the maximum x and y values can be
     int unsigned maxRowIndex=0, maxColIndex=0, rowIndex=0, colIndex=0;
     sf::Vector2f randPosition;
@@ -278,53 +278,12 @@ sf::Vector2f gameMatrix::getAdjacentPos(directions dir, sf::Vector2f currentPos)
         }
         
         goalVector = gridMatrix[rowIndex][columnIndex];
-        // cout << "Current pos is: " << goalVector.x << " x " << goalVector.y << endl;
-        // cout << "Current index is: \nrow: " << rowIndex << "\ncolumn: " << columnIndex << endl << endl;
 
-    }/*else{
+    }else{
         cout << "Matrix position: " << currentPos.x << " x " << currentPos.y << " not found" << endl;
         throw invalid_argument("Matrix position not found");
-    }*/
-    return goalVector;
-}
-
-
-class posQueue{
-    private:
-        vector<sf::Vector2f> queueVector;
-        int long unsigned maxSize;
-    public:
-        posQueue(int long unsigned maximumSize);
-        ~posQueue(){queueVector.clear();}
-        void setMaximumSize(int long unsigned newMax){maxSize = newMax;}
-        vector<sf::Vector2f> checkSize();
-        void appendPos(sf::Vector2f pos);
-        int getMaxSize(){return maxSize;}
-        vector<sf::Vector2f> getVector(){return queueVector;}
-};
-
-posQueue::posQueue(int long unsigned maximumSize){
-    queueVector = vector<sf::Vector2f>{};
-    maxSize = maximumSize;
-}
-
-vector<sf::Vector2f> posQueue::checkSize(){
-    int long unsigned i=0;
-    vector<sf::Vector2f> adjustedVector;
-
-    if (queueVector.size() > maxSize){
-        cout << "Size of vector before adjusting: " << queueVector.size() << endl;
-        cout << "Should-be size: " << maxSize << endl;
-        adjustedVector = vector<sf::Vector2f>(queueVector.end() - maxSize, queueVector.end());
-        cout << "Size of adjusted vector: " << adjustedVector.size() << endl;
     }
-
-    queueVector = adjustedVector;
-    return adjustedVector;
-}
-
-void posQueue::appendPos(sf::Vector2f pos){
-    queueVector.push_back(pos);
+    return goalVector;
 }
 
 
@@ -345,7 +304,6 @@ int main(){
 
     sf::Vector2f nextHeadPos, lastHeadPos;
     vector<sf::Vector2f> lastPositionsVector;
-    posQueue lastPositions(1);
     appleBlock theApple(matx.getDivWidth());
     theApple.setAppleRandPosition(matx.getGridMatrix());
 
@@ -404,51 +362,44 @@ int main(){
         
 
         // detecting collisions
-        if (theApple.getAppleBounds().intersects(head.getHead().getGlobalBounds())){
-            theApple.setAppleRandPosition(matx.getGridMatrix());
-            score++;
-            cout << "New score is: " << score << endl;
+        // With itself
+        for (i=0; i<bodyRectVector.size(); i++){
+            if ((head.getHead().getGlobalBounds()).intersects(bodyRectVector[i].getBodyPartRect().getGlobalBounds())){
+                cout << "You crashed into yourself! Game ended with a score of " << score << " points" << endl;
+                window.close();
+            }
+        }
 
-            // firstBodyElem = snakeBody(head.getHeadSize());
+        // With apple
+        if (theApple.getAppleBounds().intersects(head.getHead().getGlobalBounds())){
+            score++;
+            theApple.setAppleRandPosition(matx.getGridMatrix(), vector<sf::Vector2f>(lastPositionsVector.end() - score, lastPositionsVector.end()) );
+
             bodyRectVector.push_back(snakeBody(head.getHeadSize()));
-            bodyVector.clear();
+            bodyVector.clear();     // pointers in the vector dont need to be deleted because they will be linked again in the for loop
             for (i=0; i< bodyRectVector.size(); i++){
                 tempSnakeBodyMem = &bodyRectVector[i]; 
-                cout << tempSnakeBodyMem << endl;
                 bodyVector.push_back(tempSnakeBodyMem);
             }
-            cout << bodyRectVector.size() << endl;
-            cout << bodyVector.size() << endl;            
-
-            cout << "\n" << endl;
-
         }
 
         lastHeadPos = head.getHead().getPosition();
         
-        lastPositions.setMaximumSize(score);
-        lastPositions.appendPos(lastHeadPos);
-        
-        lastPositionsVector = lastPositions.getVector();
+        lastPositionsVector.push_back(lastHeadPos);
 
         nextHeadPos = matx.getAdjacentPos(currentDir, head.getHead().getPosition());
 
         if (score > 0){
             for (i=0; i<bodyVector.size(); i++){
-                if (i==0){
-                    cout << lastHeadPos.x << " x " << lastHeadPos.y << endl;
-                    (bodyVector[i])->setRectPosition(lastHeadPos);
-                    cout << "La puta madre " << endl;
-                }
+                if (lastPositionsVector.size() >= i){
+                    (bodyVector[i])->setRectPosition(lastPositionsVector[lastPositionsVector.size()-(i+1)]);
 
-                if (lastPositionsVector.size() > i){
-                    (bodyVector[i])->setRectPosition(lastPositionsVector[lastPositionsVector.size()-i]);
                 }
             }
         }
         
 
-        head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);         // works but animation is weird
+        head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
 
         window.clear(BG_COLOR);
 
