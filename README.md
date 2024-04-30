@@ -10,7 +10,7 @@ compile it for windows as well.
 
 # How to use the sfml++ 'compiler'
 When you compile C++ code files that use any of the headers from the
-SFML library, you always need to include various options, so to make this part
+SFML library, you always need to include various dependencies, so to make this part
 a bit simpler to write, I made my own program that uses the g++ compiler
 and some arguments that can be passed to it in order to make compilation commands simpler to write.
 
