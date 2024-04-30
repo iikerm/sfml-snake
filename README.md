@@ -31,3 +31,6 @@ The -<sfml_options> tag can be one or more of the following:
 > SFML audio header (-lsfml-audio): `-aud`
 > 
 > OpenGL library (-lGL): `-opengl`
+
+Therefore to compile the file `snake.cc` we can use:
+`./sfml++ -n snake.cc -o snake -sys -win -gra`
