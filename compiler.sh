@@ -1,1 +1,1 @@
-./sfml++ -n snake.cc -o snake -win -sys -gra
+./sfml++ -n snake.cc -o snake -sys -win -gra
