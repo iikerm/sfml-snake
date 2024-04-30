@@ -1,7 +1,7 @@
 # Snake game in C++ using SFML library
 
 This is a simple version of the popular game 'snake' that I 
-made to learn how to use classes and the SFML graphics library in C++
+made to learn how to use classes in C++, along with the SFML graphics library
 
 It is currently only compiled for Ubuntu but I hope to be able to 
 compile it for windows as well.
