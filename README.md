@@ -18,10 +18,16 @@ It can be used as follows:
 
 `./sfml++ -n <filename.cc> -o <execname> -<sfml_options>`
 
-> The -<sfml_options> tag can be one or more of the following:
+The -<sfml_options> tag can be one or more of the following:
+> 
 > SFML system header (-lsfml-system): `-sys`
+> 
 > SFML window header (-lsfml-window): `-win`
+> 
 > SFML graphics header (-lsfml-graphics): `-gra`
+> 
 > SFML network header (-lsfml-network): `-net`
+> 
 > SFML audio header (-lsfml-audio): `-aud`
+> 
 > OpenGL library (-lGL): `-opengl`
