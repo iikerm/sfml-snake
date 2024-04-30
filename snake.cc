@@ -279,9 +279,9 @@ sf::Vector2f gameMatrix::getAdjacentPos(directions dir, sf::Vector2f currentPos)
 }
 
 
-void snake(){
+int main(){
     unsigned int i=0, score=0, lastScore=0;
-    sf::RenderWindow window(sf::VideoMode(1200, 1200), "Snake game in c++");
+    sf::RenderWindow window(sf::VideoMode(900, 900), "Snake game in c++");
     window.setFramerateLimit(MAX_FRAMES_PER_SECOND);
     cout << "Window size is: " << window.getSize().x << " x " << window.getSize().y << endl;
 
@@ -294,7 +294,7 @@ void snake(){
     vector<sf::RectangleShape*> headDrawables = head.getDrawables();
 
     sf::Vector2f nextHeadPos, lastHeadPos;
-    vector<sf::Vector2f> lastPositionsVector, shortLastPositionsVector;
+    vector<sf::Vector2f> lastPositionsVector;
     appleBlock theApple(matx.getDivWidth());
     theApple.setAppleRandPosition(matx.getGridMatrix());
 
@@ -378,9 +378,6 @@ void snake(){
         
         lastPositionsVector.push_back(lastHeadPos);
 
-        shortLastPositionsVector = vector<sf::Vector2f>(lastPositionsVector.end() - score, lastPositionsVector.end());
-        lastPositionsVector = shortLastPositionsVector;
-
         nextHeadPos = matx.getAdjacentPos(currentDir, head.getHead().getPosition());
 
         if (score > 0){
@@ -407,11 +404,11 @@ void snake(){
             window.draw((*(bodyVector[i])).getBodyPartRect());
         }
         
-        for (i=0; i<linesVector.size(); i++){
+        /*for (i=0; i<linesVector.size(); i++){
             lineToDraw[0] = linesVector[i][0];
             lineToDraw[1] = linesVector[i][1];
             window.draw(lineToDraw, 2, sf::Lines);
-        }
+        }*/
         
 
         if (count == UINT32_MAX){
@@ -421,21 +418,6 @@ void snake(){
 
         window.display();
     }
-}
-
-
-bool endGame(){
-
-}
-
-
-
-int main(){
-    bool repeatGame=false;
-    do{
-        snake();
-        repeatGame = endGame();
-    }while (repeatGame);
 
     return 0;
 }
