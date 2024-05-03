@@ -7,15 +7,20 @@
 #include <cstdlib>      // used for rand() in appleBlock
 using namespace std;
 
-const int MATRIX_SIZE = 20;
-const int unsigned MAX_FRAMES_PER_SECOND = 10;
+#define MATRIX_SIZE 20
+#define MAX_FRAMES_PER_SECOND 10
 
-const sf::Color BG_COLOR = sf::Color(0, 0, 0);
-const sf::Color SNAKE_HEAD_COLOR = sf::Color(150, 150, 255);
-const sf::Color SNAKE_EYE_COLOR = sf::Color(25, 25, 25);
-const sf::Color SNAKE_BODY_COLOR = sf::Color(150, 150, 255);
-const sf::Color LINE_COLOR = sf::Color(0, 0, 0);
+#define BG_COLOR sf::Color(0, 0, 0)                     // #000000
+#define SNAKE_HEAD_COLOR sf::Color(150, 150, 255)       // #9696FF
+#define SNAKE_EYE_COLOR sf::Color(25, 25, 25)           // #191919
+#define SNAKE_BODY_COLOR sf::Color(150, 150, 255)       // #9696FF
+#define LINE_COLOR sf::Color(0, 0, 0)                   // #000000
+#define APPLE_COLOR sf::Color(250, 50, 50)              // #FA3232
+#define SCOREBOARD_COLOR sf::Color(240, 240, 240)       // #F0F0F0
+#define END_TEXT_COLOR sf::Color(240, 240, 240)         // #F0F0F0
 
+#define SCORE_TEXT (string)"SCORE: "
+#define PIXEL_FONT_PATH "fonts/pixel-font.ttf"
 
 enum directions {north, south, west, east};
 
@@ -73,7 +78,7 @@ void snakeBody::setRectPosition(sf::Vector2f pos){
 
 
 class appleBlock{
-    sf::Color appleColor = sf::Color(250, 50, 50);
+    sf::Color appleColor = APPLE_COLOR;
     private:
         sf::RectangleShape apple;
         sf::Vector2f position;
@@ -133,6 +138,7 @@ class snakeHead{
         void setHeadPosition(sf::Vector2f pos, float divWidth);
         sf::RectangleShape getHead(){return headRect;}
         sf::Vector2f getHeadSize(){return headRect.getSize();}
+        void killHead(sf::RenderWindow &window);
 
         // pointer array is important, because if not we will be trying to draw copies of current drawables on screen instead of the actual ones we want to draw
         vector<sf::RectangleShape*> getDrawables(){return vector<sf::RectangleShape*>{&headRect, &eyeRectW, &eyeRectE};}
@@ -161,6 +167,24 @@ void snakeHead::setHeadPosition(sf::Vector2f pos, float divWidth){
 
     eyeRectW.setPosition(sf::Vector2f(pos.x+(divWidth*0.3), pos.y+(divWidth*0.4)));
     eyeRectE.setPosition(sf::Vector2f(pos.x+(divWidth*0.6), pos.y+(divWidth*0.4)));
+}
+
+void snakeHead::killHead(sf::RenderWindow &window){
+    sf::Font pixelFont;
+    if (!pixelFont.loadFromFile(PIXEL_FONT_PATH)){
+        cout << "Error while loading font" << endl;
+        window.close();
+    }
+
+    sf::Text eyeW("x", pixelFont, eyeRectW.getSize().y), eyeE("x", pixelFont, eyeRectE.getSize().y);
+    eyeW.setPosition(eyeRectW.getPosition());
+    eyeW.setFillColor(eyeRectW.getFillColor());
+
+    eyeE.setPosition(eyeRectE.getPosition());
+    eyeE.setFillColor(eyeRectE.getFillColor());
+
+    window.draw(eyeW);
+    window.draw(eyeE);
 }
 
 
@@ -219,14 +243,14 @@ gameMatrix::gameMatrix(sf::RenderWindow &master, unsigned int nDivs){
     // Vertical lines:
     for (i=0; i<gridMatrix[0].size(); i++){
         currentLine.clear();
-        currentLine.push_back(sf::Vertex(gridMatrix[0][i], sf::Color(0, 0, 0)));
+        currentLine.push_back(sf::Vertex(gridMatrix[0][i], lineColor));
         currentLine.push_back(sf::Vertex(sf::Vector2f(gridMatrix[(gridMatrix.size()-1)][i].x+divWidth, gridMatrix[(gridMatrix.size()-1)][i].y), lineColor));
         linesVector.push_back(currentLine);
     }
     // Horizontal lines
     for (i=0; i<gridMatrix.size(); i++){
         currentLine.clear();
-        currentLine.push_back(sf::Vertex(gridMatrix[i][0], sf::Color(0, 0, 0)));
+        currentLine.push_back(sf::Vertex(gridMatrix[i][0], lineColor));
         currentLine.push_back(sf::Vertex(sf::Vector2f(gridMatrix[i][gridMatrix[i].size()-1].x, gridMatrix[i][gridMatrix[i].size()-1].y+divWidth), lineColor));
         linesVector.push_back(currentLine);
     }
@@ -280,14 +304,27 @@ sf::Vector2f gameMatrix::getAdjacentPos(directions dir, sf::Vector2f currentPos)
 
 
 int main(){
-    unsigned int i=0, score=0, lastScore=0;
-    sf::RenderWindow window(sf::VideoMode(900, 900), "Snake game in c++");
+    bool gameLost=false;
+    unsigned int i=0, score=0, finalCount=0;
+    sf::RenderWindow window(sf::VideoMode(sf::VideoMode::getDesktopMode().height-100, sf::VideoMode::getDesktopMode().height-100), "Best snake game ever");
     window.setFramerateLimit(MAX_FRAMES_PER_SECOND);
-    cout << "Window size is: " << window.getSize().x << " x " << window.getSize().y << endl;
 
     gameMatrix matx(window, MATRIX_SIZE);
     vector<vector<sf::Vertex>> linesVector = matx.getLinesVector();
     sf::Vertex lineToDraw[2];
+
+    sf::Font pixelFont;
+    if (!pixelFont.loadFromFile(PIXEL_FONT_PATH)){
+        cout << "Error while loading font" << endl;
+        window.close();
+    }
+
+    sf::Text scoreBoard(SCORE_TEXT+"0", pixelFont, matx.getDivWidth().y*0.8), endText("YOU DIED!", pixelFont, 30);
+    scoreBoard.setPosition(sf::Vector2f(window.getSize().x/2 - 3*scoreBoard.getCharacterSize(), 10));
+    scoreBoard.setFillColor(SCOREBOARD_COLOR);
+
+    endText.setPosition(sf::Vector2f(matx.getMiddlePos().x - 50, matx.getMiddlePos().y - 40));
+    endText.setFillColor(END_TEXT_COLOR);
 
     snakeHead head(matx.getDivWidth());
     head.setHeadPosition(matx.getMiddlePos(), matx.getDivWidth().x);
@@ -356,8 +393,8 @@ int main(){
         // With itself
         for (i=0; i<bodyRectVector.size(); i++){
             if ((head.getHead().getGlobalBounds()).intersects(bodyRectVector[i].getBodyPartRect().getGlobalBounds())){
-                cout << "You crashed into yourself! Game ended with a score of " << score << " points" << endl;
-                window.close();
+                //cout << "You crashed into yourself! Game ended with a score of " << score << " points" << endl;
+                gameLost = true;
             }
         }
 
@@ -389,27 +426,52 @@ int main(){
             }
         }
         
+        if (gameLost){
+            nextHeadPos = matx.getMiddlePos();
+        }
 
         head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
+        scoreBoard.setString(SCORE_TEXT+to_string(score));
 
         window.clear(BG_COLOR);
 
-        window.draw(theApple.getAppleRect());
+        
+        
+        if (!gameLost){
+            window.draw(theApple.getAppleRect());
+
+            for (i=0; i<bodyVector.size(); i++){
+                window.draw((*(bodyVector[i])).getBodyPartRect());
+            }
+        }
 
         for (i=0; i<headDrawables.size(); i++){
-            window.draw(*(headDrawables[i]));
+            if (!gameLost || i < 1){
+                window.draw(*(headDrawables[i]));
+            }
         }
 
-        for (i=0; i<bodyVector.size(); i++){
-            window.draw((*(bodyVector[i])).getBodyPartRect());
+        if (gameLost){
+            head.killHead(window);
+            finalCount++;
+
+            if (finalCount/(MAX_FRAMES_PER_SECOND*4) == 1){     // Will close the window after 4 seconds
+                window.close();
+            }
         }
         
-        /*for (i=0; i<linesVector.size(); i++){
+        /* // Draws grid lines, commented because I prefer how it looks without them
+        for (i=0; i<linesVector.size(); i++){
             lineToDraw[0] = linesVector[i][0];
             lineToDraw[1] = linesVector[i][1];
             window.draw(lineToDraw, 2, sf::Lines);
         }*/
-        
+
+        window.draw(scoreBoard);
+        if (gameLost){
+            window.draw(endText);
+            window.setTitle("Oh no! You ate yourself!");
+        }
 
         if (count == UINT32_MAX){
             count = 0;
