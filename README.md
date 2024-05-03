@@ -42,6 +42,10 @@ The -<sfml_options> tag can be one or more of the following:
 Therefore to compile the file `snake.cc` we can use:
  
 `./sfml++ -n snake.cc -o snake -sys -win -gra`
- 
- 
+---
+
+# Game preview
+
+![imagen](https://github.com/iikerm/sfml-snake/assets/151840754/b1f2af64-9d38-450f-a420-a2d2debc97f9)
+
 
