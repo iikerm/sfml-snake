@@ -15,8 +15,10 @@ a bit simpler to write, I made my own program that uses the g++ compiler
 and some arguments that can be passed to it in order to make compilation commands simpler to write.
 
 To compile the file `snake.cc`, the following command can be copied:
+
 `g++ snake.cc -o snake -lsfml-window -lsfml-system -lsfml-graphics`
 
+  
 Or you can also use my program as follows:
  
 `./sfml++ -n <filename.cc> -o <execname> -<sfml_options>`
