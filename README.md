@@ -14,7 +14,7 @@ SFML library, you always need to include various dependencies, so to make this p
 a bit simpler to write, I made my own program that uses the g++ compiler
 and some arguments that can be passed to it in order to make compilation commands simpler to write.
 
-To compile the file `snake.cc`, the following command can be copied:
+To compile the file `snake.cc`, to change the game's colors for example, the following command can be copied:
 
 `g++ snake.cc -o snake -lsfml-window -lsfml-system -lsfml-graphics`
 
