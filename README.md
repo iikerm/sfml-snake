@@ -8,16 +8,19 @@ compile it for windows as well.
 
 ---
 
-# How to use the sfml++ 'compiler'
+# How to use the sfml++ 'compiler' in Ubuntu
 When you compile C++ code files that use any of the headers from the
 SFML library, you always need to include various dependencies, so to make this part
 a bit simpler to write, I made my own program that uses the g++ compiler
 and some arguments that can be passed to it in order to make compilation commands simpler to write.
 
-It can be used as follows:
+To compile the file `snake.cc`, the following command can be copied:
+`g++ snake.cc -o snake -lsfml-window -lsfml-system -lsfml-graphics`
 
+Or you can also use my program as follows:
+ 
 `./sfml++ -n <filename.cc> -o <execname> -<sfml_options>`
-
+ 
 The -<sfml_options> tag can be one or more of the following:
 > 
 > SFML system header (-lsfml-system): `-sys`
@@ -31,13 +34,12 @@ The -<sfml_options> tag can be one or more of the following:
 > SFML audio header (-lsfml-audio): `-aud`
 > 
 > OpenGL library (-lGL): `-opengl`
-
+ 
   
-
+ 
 Therefore to compile the file `snake.cc` we can use:
-
+ 
 `./sfml++ -n snake.cc -o snake -sys -win -gra`
-
-
-Or simply execute the file `compiler.sh` after giving it permission with `chmod +x compiler.sh`
+ 
+ 
 
