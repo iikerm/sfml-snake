@@ -39,6 +39,7 @@ After having everything installed, we can follow the next steps:
 4. Run the following commands:
 - `vcpkg new --application`
 - `vcpkg add port sfml`
+ 
   What each one of these commands does is explained in the vcpkg install tutorial mentioned above (part nº2)
 5. Now you can close the console and go to the project's properties in visual studio, where you must do the following:
 - `Configuration properties > vcpkg > use vcpkg manifest` set it to yes
