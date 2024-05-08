@@ -72,6 +72,7 @@ After doing these steps, the program can be compiled without a command window po
 >Take into account that these last two steps are not mandatory (e.g. You can link dynamically and remove the console window without linking statically,
 > you can just link the program statically, without removing the console etc.)
 
+---
 
 # How to use the sfml++ 'compiler' in Ubuntu
 When you compile C++ code files that use any of the headers from the
