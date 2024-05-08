@@ -56,7 +56,7 @@ In case that you want to link the libraries statically (.exe file weighs more, b
 - SFML Graphics: `opengl32.lib` and `freetype.lib`
 - SFML Window: `opengl32.lib`, `winmm.lib` and `gdi32.lib`
 - SFML System: `winmm.lib`
-> They don't need to be repeated, it is enough with adding each one a single time. They must each be added on their own in a new line. You can visit [this](https://www.sfml-dev.org/tutorials/2.6/start-vc.php) page to see a full list of dependencies for all of the SFML libraries
+> They don't need to be repeated, it is enough with adding each one a single time. They must each be added on their own in a new line. You can visit [this](https://www.sfml-dev.org/tutorials/2.6/start-vc.php) page to see a full list of dependencies for the rest of the SFML libraries.
 
 Now your project can be compiled statically!
 
