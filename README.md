@@ -3,8 +3,7 @@
 This is a simple version of the popular game 'snake' that I 
 made to learn how to use classes in C++, along with the SFML graphics library.
 
-It is currently only compiled for Ubuntu but I hope to be able to 
-compile it for windows as well.
+It is currently only compiled for Windows as `snake.exe` and for Ubuntu/Linux as `snake`.
 
 ---
 
