@@ -2,19 +2,21 @@
 #define _SFML_GRAPHICS_HPP_
 
 #include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 #include <iostream>
 #include <vector>
 #include <cstdlib>      // used for rand() in appleBlock
 using namespace std;
 
-#define MATRIX_SIZE 20
+#define MATRIX_SIZE 15
 #define MAX_FRAMES_PER_SECOND 10
+#define DRAW_GRID false
 
 #define BG_COLOR sf::Color(0, 0, 0)                     // #000000
 #define SNAKE_HEAD_COLOR sf::Color(150, 150, 255)       // #9696FF
 #define SNAKE_EYE_COLOR sf::Color(25, 25, 25)           // #191919
 #define SNAKE_BODY_COLOR sf::Color(150, 150, 255)       // #9696FF
-#define LINE_COLOR sf::Color(0, 0, 0)                   // #000000
+#define LINE_COLOR sf::Color(240, 240, 240)             // #F0F0F0
 #define APPLE_COLOR sf::Color(250, 50, 50)              // #FA3232
 #define SCOREBOARD_COLOR sf::Color(240, 240, 240)       // #F0F0F0
 #define END_TEXT_COLOR sf::Color(240, 240, 240)         // #F0F0F0
@@ -306,7 +308,8 @@ sf::Vector2f gameMatrix::getAdjacentPos(directions dir, sf::Vector2f currentPos)
 int main(){
     bool gameLost=false;
     unsigned int i=0, score=0, finalCount=0;
-    sf::RenderWindow window(sf::VideoMode(sf::VideoMode::getDesktopMode().height-100, sf::VideoMode::getDesktopMode().height-100), "Best snake game ever");
+    sf::RenderWindow window(sf::VideoMode(900, 900), "Best snake game ever");
+    // cout << window.getSize().x << " x " << window.getSize().y << endl;
     window.setFramerateLimit(MAX_FRAMES_PER_SECOND);
 
     gameMatrix matx(window, MATRIX_SIZE);
@@ -348,41 +351,39 @@ int main(){
             if(event.type == sf::Event::Closed || (event.type == sf::Event::KeyPressed && sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))){
                 window.close();
             }
+        }
 
-            if (event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased){
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
-                    // nextHeadPos = matx.getAdjacentPos(north, head.getHead().getPosition());
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::W)){
+            // nextHeadPos = matx.getAdjacentPos(north, head.getHead().getPosition());
+            // head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
+            if (currentDir != oppositeDir(north)){
+                currentDir = north;
+            }
+            lastMoved = count;
+        }else{
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
+                // nextHeadPos = matx.getAdjacentPos(south, head.getHead().getPosition());
+                // head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
+                if (currentDir != oppositeDir(south)){
+                    currentDir = south;
+                }
+                lastMoved = count;
+            }else{
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
+                    // nextHeadPos = matx.getAdjacentPos(east, head.getHead().getPosition());
                     // head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
-                    if (currentDir != oppositeDir(north)){
-                        currentDir = north;
+                    if (currentDir != oppositeDir(east)){
+                        currentDir = east;
                     }
                     lastMoved = count;
                 }else{
-                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || sf::Keyboard::isKeyPressed(sf::Keyboard::S)){
-                        // nextHeadPos = matx.getAdjacentPos(south, head.getHead().getPosition());
+                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
+                        // nextHeadPos = matx.getAdjacentPos(west, head.getHead().getPosition());
                         // head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
-                        if (currentDir != oppositeDir(south)){
-                            currentDir = south;
+                        if (currentDir != oppositeDir(west)){
+                            currentDir = west;
                         }
                         lastMoved = count;
-                    }else{
-                        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::D)){
-                            // nextHeadPos = matx.getAdjacentPos(east, head.getHead().getPosition());
-                            // head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
-                            if (currentDir != oppositeDir(east)){
-                                currentDir = east;
-                            }
-                            lastMoved = count;
-                        }else{
-                            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A)){
-                                // nextHeadPos = matx.getAdjacentPos(west, head.getHead().getPosition());
-                                // head.setHeadPosition(nextHeadPos, matx.getDivWidth().x);
-                                if (currentDir != oppositeDir(west)){
-                                    currentDir = west;
-                                }
-                                lastMoved = count;
-                            }
-                        }
                     }
                 }
             }
@@ -460,17 +461,25 @@ int main(){
             }
         }
         
-        /* // Draws grid lines, commented because I prefer how it looks without them
-        for (i=0; i<linesVector.size(); i++){
-            lineToDraw[0] = linesVector[i][0];
-            lineToDraw[1] = linesVector[i][1];
-            window.draw(lineToDraw, 2, sf::Lines);
-        }*/
+        // Draws grid lines if constant is set to true
+        if (DRAW_GRID == true){
+            for (i=0; i<linesVector.size(); i++){
+                lineToDraw[0] = linesVector[i][0];
+                lineToDraw[1] = linesVector[i][1];
+                window.draw(lineToDraw, 2, sf::Lines);
+            }
+        }
 
         window.draw(scoreBoard);
         if (gameLost){
             window.draw(endText);
             window.setTitle("Oh no! You ate yourself!");
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)){
+                window.close();
+                gameLost = false;
+                main();
+            }
         }
 
         if (count == UINT32_MAX){
