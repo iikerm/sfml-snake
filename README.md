@@ -76,6 +76,10 @@ After doing these steps, the program can be compiled without a command window po
 ---
 
 # How to use the sfml++ 'compiler' in Ubuntu
+First of all, you will need to have the sfml library installed. This can be achieved by using:
+
+ `sudo apt install libsfml-dev`
+
 When you compile C++ code files that use any of the headers from the
 SFML library, you always need to include various dependencies, so to make this part
 a bit simpler to write, I made my own program that uses the g++ compiler
