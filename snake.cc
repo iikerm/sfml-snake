@@ -106,8 +106,9 @@ appleBlock::appleBlock(sf::Vector2f rectSize, sf::Color customAppleColor){    //
 
 void appleBlock::setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix, vector<sf::Vector2f> invalidPositions={}){
     // we need the grid matrix in order to establish what the maximum x and y values can be
-    int unsigned maxRowIndex=0, maxColIndex=0, rowIndex=0, colIndex=0;
+    int unsigned maxRowIndex=0, maxColIndex=0, rowIndex=0, colIndex=0, i=0;
     sf::Vector2f randPosition;
+    bool posValid=true;
 
     maxColIndex = gridMatrix.size();    // Maximum index possible for a column (Y value) inside the grid matrix
     maxRowIndex = gridMatrix[0].size();    // Maximum index possible for a row (X value) inside the grid matrix
@@ -116,10 +117,18 @@ void appleBlock::setAppleRandPosition(vector<vector<sf::Vector2f>> gridMatrix, v
     srand(time(0));     // Set random (based on current time) seed for random number
     
     do{
+        posValid = true;
         colIndex = (rand()%maxColIndex);
         rowIndex = (rand()%maxRowIndex);
         randPosition = sf::Vector2f(gridMatrix[rowIndex][colIndex]);        // matrix should be square so order of row/column should not matter in theory
-    }while(randPosition == position);       // so that position cannot be the same two consecutive times
+
+        for (i=0; i<invalidPositions.size(); i++){
+            if (randPosition == invalidPositions[i]){
+                posValid = false;
+            }
+        }
+
+    }while(randPosition == position || !posValid);       // so that position cannot be the same two consecutive times
     
     position = randPosition;
     apple.setPosition(position);
@@ -455,6 +464,12 @@ int main(){
         if (gameLost){
             head.killHead(window);
             finalCount++;
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)){
+                window.close();
+                gameLost = false;
+                main();
+            }
 
             if (finalCount/(MAX_FRAMES_PER_SECOND*4) == 1){     // Will close the window after 4 seconds
                 window.close();
