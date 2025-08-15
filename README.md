@@ -75,40 +75,31 @@ After doing these steps, the program can be compiled without a command window po
 
 ---
 
-# How to use the sfml++ 'compiler' in Ubuntu
+# How to compile for Ubuntu
 First of all, you will need to have the sfml library installed. This can be achieved by using:
 
  `sudo apt install libsfml-dev`
 
 When you compile C++ code files that use any of the headers from the
-SFML library, you always need to include various dependencies, so to make this part
-a bit simpler to write, I made my own program that uses the g++ compiler
-and some arguments that can be passed to it in order to make compilation commands simpler to write.
+SFML library, you always need to include various dependencies, which are shown below.
 
-To compile the file `snake.cc`, for changing the game's colors for example, the following command can be copied:
+For compiling the file `snake.cc`, the following command should be used:
 
-`g++ snake.cc -o snake -lsfml-window -lsfml-system -lsfml-graphics`
+`g++ snake.cc -o snake -<sfml_options>`
 
-  
-Or you can also use my program as follows:
- 
-`./sfml++ -n <filename.cc> -o <execname> -<sfml_options>`
- 
+> For this program specifically, the sfml_options used would be: `-lsfml-window` `-lsfml-system` `-lsfml-graphics`
+
+
 The -<sfml_options> tag can be one or more of the following:
-> 
-> SFML system header (-lsfml-system): `-sys`
-> 
-> SFML window header (-lsfml-window): `-win`
-> 
-> SFML graphics header (-lsfml-graphics): `-gra`
-> 
-> SFML network header (-lsfml-network): `-net`
-> 
-> SFML audio header (-lsfml-audio): `-aud`
-> 
-> OpenGL library (-lGL): `-opengl`
+- SFML system header (`-lsfml-system`):
  
-Therefore to compile the file `snake.cc` we can use:
+- SFML window header (`-lsfml-window`):
  
-`./sfml++ -n snake.cc -o snake -sys -win -gra`
+- SFML graphics header (`-lsfml-graphics`):
+ 
+- SFML network header (`-lsfml-network`):
+ 
+- SFML audio header (`-lsfml-audio`):
+ 
+- OpenGL library (`-lGL`):
 
